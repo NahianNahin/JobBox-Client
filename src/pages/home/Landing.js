@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import hero1 from "../../assets/hero-01.jpg";
 import hero2 from "../../assets/hero-02.jpg";
 import hero3 from "../../assets/hero-03.jpg";
@@ -7,6 +7,7 @@ import Badge from "../../components/reusable/Badge";
 import { gsap } from "gsap";
 
 const Landing = () => {
+
   const keywords = [
     "Web Developer",
     "Web Designer",

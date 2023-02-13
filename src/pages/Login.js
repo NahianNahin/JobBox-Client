@@ -1,14 +1,37 @@
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
 
 import { useNavigate } from "react-router-dom";
 import loginImage from "../assets/login.svg";
+import { googleSignUp, loginUser } from "../features/auth/authSlice";
 const Login = () => {
   const { register, handleSubmit, reset } = useForm();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { email, isLoading, isError, error } = useSelector(state => state.auth);
 
+  useEffect(() => {
+    if (isLoading) {
+      toast.loading("Loading", { id: "Login" });
+    }
+    if (!isLoading && email) {
+      toast.success("Login Successfully", { id: "Login" });
+      reset();
+      navigate("/")
+    }
+    if (!isLoading && isError && !email) {
+      toast.error(error, { id: "Login" });
+      reset();
+
+    }
+  }, [email, isLoading, isError, error, reset, navigate])
   const onSubmit = (data) => {
     console.log(data);
+    const email = data.email;
+    const password = data.password;
+    dispatch(loginUser({ email, password }));
   };
 
   return (
@@ -55,6 +78,15 @@ const Login = () => {
                     Sign up
                   </span>
                 </p>
+              </div>
+              <div className='!mt-8 '>
+                <button
+                  type='button'
+                  className='font-bold text-white py-3 rounded-full bg-primary w-full disabled:bg-gray-300 disabled:cursor-not-allowed'
+                  onClick={() => dispatch(googleSignUp())}
+                >
+                  SignUp With Google
+                </button>
               </div>
             </div>
           </form>

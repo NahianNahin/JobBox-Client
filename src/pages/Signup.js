@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import loginImage from "../assets/login.svg";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { createUser, googleSignUp } from "../features/auth/authSlice";
 const Signup = () => {
   const { handleSubmit, register, reset, control } = useForm();
   const password = useWatch({ control, name: "password" });
   const confirmPassword = useWatch({ control, name: "confirmPassword" });
   const navigate = useNavigate();
   const [disabled, setDisabled] = useState(true);
-
+  const dispatch = useDispatch();
+  const { email } = useSelector(state => state.auth.user);
   useEffect(() => {
     if (
       password !== undefined &&
@@ -25,6 +28,8 @@ const Signup = () => {
 
   const onSubmit = (data) => {
     console.log(data);
+    dispatch(createUser({ email: data.email, password: data.password }));
+
   };
 
   return (
@@ -89,6 +94,15 @@ const Signup = () => {
                     Login
                   </span>
                 </p>
+              </div>
+              <div className='!mt-8 '>
+                <button
+                  type='button'
+                  className='font-bold text-white py-3 rounded-full bg-primary w-full disabled:bg-gray-300 disabled:cursor-not-allowed'
+                  onClick={() => dispatch(googleSignUp())}
+                >
+                  SignUp With Google
+                </button>
               </div>
             </div>
           </form>
