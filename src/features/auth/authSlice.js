@@ -45,7 +45,7 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         logOut: (state) => {
-            state.user.email = "";
+            state.user = { email: '', role: "" }
             state.isloading = false;
             state.isError = false;
             state.error = ""

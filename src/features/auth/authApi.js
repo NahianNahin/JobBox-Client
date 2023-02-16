@@ -14,15 +14,29 @@ const authApi = apiSlice.injectEndpoints({
                     const res = await queryFulfilled();
                     dispatch(getUser(data.email));
                     console.log(res);
-                } 
+                }
                 catch (error) {
                     // Error Handle
                 }
             }
 
         }),
+        getUserById: builder.query({
+            query: (data) => ({
+                url: `/users/${data}`,
+            }),
+
+        }),
+        addMessage: builder.mutation({
+            query: (data) => ({
+                method: "PATCH",
+                url: "/chat",
+                body: data
+            }),
+
+        }),
 
     })
 });
 
-export const { useRegisterMutation} = authApi;
+export const { useRegisterMutation, useGetUserByIdQuery, useAddMessageMutation } = authApi;

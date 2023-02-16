@@ -26,7 +26,7 @@ const AddJob = () => {
 
   const onSubmit = (data) => {
     console.log(data);
-    addJob(data)
+    addJob({ ...data, applicants: [], queries: [] })
   };
 
   return (

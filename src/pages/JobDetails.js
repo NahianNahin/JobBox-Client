@@ -1,16 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 
 import meeting from "../assets/meeting.jpg";
 import { BsArrowRightShort, BsArrowReturnRight } from "react-icons/bs";
-import { useParams } from "react-router-dom";
-import { useGetJobByIdQuery } from "../features/job/jobApi";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAddQuestionMutation, useAddReplyMutation, useApplyJobMutation, useGetJobByIdQuery, useToggleAppStateMutation } from "../features/job/jobApi";
 import Loading from "../components/reusable/Loading";
+import { useSelector } from "react-redux";
+import { toast } from "react-hot-toast";
+import { useForm } from "react-hook-form";
 
 const JobDetails = () => {
   const { id } = useParams();
-  const { data, isLoading, isError, error } = useGetJobByIdQuery(id);
-  console.log(data);
-
+  const [reply, setReply] = useState("");
+  const [applicationState, setApplicationState] = useState(true);
+  const { handleSubmit, register, reset } = useForm();
+  const { data, isLoading, isError, error } = useGetJobByIdQuery(id, { pollingInterval: 500 });
+  const [apply] = useApplyJobMutation();
+  const [sendQuestion] = useAddQuestionMutation();
+  const [sendReply] = useAddReplyMutation();
+  const [toggleState] = useToggleAppStateMutation();
+  const navigate = useNavigate();
+  const { user } = useSelector(state => state.auth);
   const {
     companyName,
     position,
@@ -19,14 +29,55 @@ const JobDetails = () => {
     workLevel,
     employmentType,
     salaryRange,
-    skills,
-    requirements,
-    responsibilities,
     overview,
-    queries,
     _id,
   } = data?.data || {};
 
+  const handleApply = () => {
+    if (user.role === "employer") {
+      toast.error("You need a candidate account.");
+      return;
+    }
+    if (user.role === "") {
+      navigate("/register");
+      return;
+    }
+    const data = {
+      userId: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      jobId: _id
+    };
+    console.log(data);
+    apply(data);
+  }
+  const handleQuestion = (data) => {
+    const questionData = {
+      userID: user._id,
+      jobId: _id,
+      email: user.email,
+      question: data.question
+    }
+    console.log(questionData);
+    sendQuestion(questionData);
+    reset();
+  }
+  const handleReply = (candidate_id) => {
+    const replyData = {
+      userID: candidate_id,
+      reply: reply
+    }
+    console.log(replyData);
+    sendReply(replyData);
+  }
+  const handleApplicationState = () => {
+    setApplicationState(!applicationState);
+    const data = {
+      applicationState
+    }
+    // toggleState(data, _id);
+  }
   let content;
   if (isLoading) {
     content = <Loading></Loading>;
@@ -40,8 +91,37 @@ const JobDetails = () => {
           </div>
           <div className='space-y-5'>
             <div className='flex justify-between items-center mt-5'>
-              <h1 className='text-xl font-semibold text-primary'>{position}</h1>
-              <button className='btn'>Apply</button>
+              <h1 className='text-2xl font-semibold text-primary'>{position}</h1>
+              <h1 className='text-xl font-semibold'>Total Applicants : {data?.data?.applicants.length}</h1>
+
+              {
+                user.role === ("candidate" || "")
+                &&
+                applicationState
+                &&
+                <button
+                  onClick={handleApply}
+                  className='btn'
+                >Apply
+                </button>
+              }
+              {user.role === "employer"
+                &&
+                <button
+                  onClick={() => navigate(`/view-applicants/${_id}`)}
+                  className='btn'
+                >View Applicants
+                </button>
+              }
+              {user.role === "employer"
+                &&
+                <button
+                  onClick={handleApplicationState}
+                  className='btn'
+                >{applicationState ? "open Application" : "Close Application"}
+                </button>
+              }
+
             </div>
             <div>
               <h1 className='text-primary text-lg font-medium mb-3'>Overview</h1>
@@ -88,8 +168,8 @@ const JobDetails = () => {
               <h1 className='text-xl font-semibold text-primary mb-5'>
                 General Q&A
               </h1>
-              {/* <div className='text-primary my-2'>
-                {queries.map(({ question, email, reply, id }) => (
+              <div className='text-primary my-2'>
+                {data?.data?.queries.map(({ question, email, reply, id }) => (
                   <div>
                     <small>{email}</small>
                     <p className='text-lg font-medium'>{question}</p>
@@ -99,32 +179,47 @@ const JobDetails = () => {
                       </p>
                     ))}
 
-                    <div className='flex gap-3 my-5'>
-                      <input placeholder='Reply' type='text' className='w-full' />
-                      <button
-                        className='shrink-0 h-14 w-14 bg-primary/10 border border-primary hover:bg-primary rounded-full transition-all  grid place-items-center text-primary hover:text-white'
-                        type='button'
-                      >
-                        <BsArrowRightShort size={30} />
-                      </button>
-                    </div>
+                    {user.role === "employer"
+                      &&
+                      <div className='flex gap-3 my-5'>
+                        <input
+                          placeholder='Reply'
+                          type='text'
+                          className='w-full'
+                          onBlur={(e) => setReply(e.target.value)}
+                        />
+                        <button
+                          className='shrink-0 h-14 w-14 bg-primary/10 border border-primary hover:bg-primary rounded-full transition-all  grid place-items-center text-primary hover:text-white'
+                          type='button'
+                          onClick={() => handleReply(id)}
+                        >
+                          <BsArrowRightShort size={30} />
+                        </button>
+                      </div>}
                   </div>
                 ))}
-              </div> */}
-
-              <div className='flex gap-3 my-5'>
-                <input
-                  placeholder='Ask a question...'
-                  type='text'
-                  className='w-full'
-                />
-                <button
-                  className='shrink-0 h-14 w-14 bg-primary/10 border border-primary hover:bg-primary rounded-full transition-all  grid place-items-center text-primary hover:text-white'
-                  type='button'
-                >
-                  <BsArrowRightShort size={30} />
-                </button>
               </div>
+
+              {
+                user.role === "candidate"
+                &&
+                <form onSubmit={handleSubmit(handleQuestion)}>
+                  <div className='flex gap-3 my-5'>
+                    <input
+                      placeholder='Ask a question...'
+                      type='text'
+                      className='w-full'
+                      {...register("question")}
+                    />
+                    <button
+                      className='shrink-0 h-14 w-14 bg-primary/10 border border-primary hover:bg-primary rounded-full transition-all  grid place-items-center text-primary hover:text-white'
+                      type='submit'
+                    >
+                      <BsArrowRightShort size={30} />
+                    </button>
+                  </div>
+                </form>
+              }
             </div>
           </div>
         </div>

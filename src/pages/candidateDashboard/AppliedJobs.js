@@ -6,9 +6,9 @@ import { useGetAppliedJobsQuery } from "../../features/job/jobApi";
 
 const AppliedJobs = () => {
   const {
-    user: { email },
+    user: { _id },
   } = useSelector((state) => state.auth);
-  const { data, isLoading } = useGetAppliedJobsQuery(email);
+  const { data, isLoading } = useGetAppliedJobsQuery(_id,{refetchOnMountOrArgChange : true});
 
   if (isLoading) {
     return <Loading />;

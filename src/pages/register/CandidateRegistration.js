@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { FaChevronLeft } from "react-icons/fa";
+import { useRegisterMutation } from "../../features/auth/authApi";
+import { useSelector } from "react-redux";
 
 const CandidateRegistration = () => {
   const [countries, setCountries] = useState([]);
@@ -9,7 +11,8 @@ const CandidateRegistration = () => {
   const term = useWatch({ control, name: "term" });
   console.log(term);
   const navigate = useNavigate();
-
+  const { email } = useSelector(state => state.auth.user);
+  const [postUser, { isLoading, isError }] = useRegisterMutation();
   useEffect(() => {
     fetch("https://restcountries.com/v3.1/all")
       .then((res) => res.json())
@@ -18,6 +21,7 @@ const CandidateRegistration = () => {
 
   const onSubmit = (data) => {
     console.log(data);
+    postUser({ ...data, role: "candidate",chat : [] })
   };
 
   return (
@@ -51,7 +55,7 @@ const CandidateRegistration = () => {
             <label className='mb-2' htmlFor='email'>
               Email
             </label>
-            <input type='email' id='email' {...register("email")} />
+            <input type='email' id='email' defaultValue={email} readOnly {...register("email")} />
           </div>
           <div className='flex flex-col w-full max-w-xs'>
             <h1 className='mb-3'>Gender</h1>
